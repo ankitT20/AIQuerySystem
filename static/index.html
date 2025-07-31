@@ -1,0 +1,406 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Query System</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        
+        .header {
+            text-align: center;
+            color: white;
+            margin-bottom: 30px;
+        }
+        
+        .header h1 {
+            font-size: 3rem;
+            margin-bottom: 10px;
+        }
+        
+        .header p {
+            font-size: 1.2rem;
+            opacity: 0.9;
+        }
+        
+        .main-content {
+            background: white;
+            border-radius: 15px;
+            padding: 30px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+        }
+        
+        .query-form {
+            margin-bottom: 30px;
+        }
+        
+        .form-group {
+            margin-bottom: 20px;
+        }
+        
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+            color: #555;
+        }
+        
+        input[type="text"], select {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e1e1e1;
+            border-radius: 8px;
+            font-size: 16px;
+            transition: border-color 0.3s;
+        }
+        
+        input[type="text"]:focus, select:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+        
+        .btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 12px 30px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: bold;
+            transition: transform 0.2s;
+        }
+        
+        .btn:hover {
+            transform: translateY(-2px);
+        }
+        
+        .btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+        
+        .response-section {
+            margin-top: 30px;
+            padding: 20px;
+            background: #f8f9fa;
+            border-radius: 10px;
+            border-left: 5px solid #667eea;
+        }
+        
+        .response-content {
+            margin-bottom: 20px;
+            padding: 15px;
+            background: white;
+            border-radius: 8px;
+            border: 1px solid #e1e1e1;
+        }
+        
+        .metadata {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+        
+        .metadata-item {
+            background: white;
+            padding: 15px;
+            border-radius: 8px;
+            text-align: center;
+            border: 1px solid #e1e1e1;
+        }
+        
+        .metadata-value {
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: #667eea;
+        }
+        
+        .metadata-label {
+            font-size: 0.9rem;
+            color: #666;
+            margin-top: 5px;
+        }
+        
+        .sources {
+            margin-top: 15px;
+        }
+        
+        .source-item {
+            background: white;
+            padding: 10px 15px;
+            margin: 5px 0;
+            border-radius: 5px;
+            border-left: 3px solid #667eea;
+        }
+        
+        .loading {
+            display: none;
+            text-align: center;
+            padding: 20px;
+        }
+        
+        .spinner {
+            width: 40px;
+            height: 40px;
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #667eea;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 10px;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        .hidden {
+            display: none;
+        }
+        
+        .error {
+            background: #f8d7da;
+            color: #721c24;
+            padding: 15px;
+            border-radius: 8px;
+            border: 1px solid #f5c6cb;
+            margin: 15px 0;
+        }
+        
+        .system-info {
+            background: #d4edda;
+            color: #155724;
+            padding: 15px;
+            border-radius: 8px;
+            border: 1px solid #c3e6cb;
+            margin-bottom: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🤖 AI Query System</h1>
+            <p>Ask questions and get answers from our knowledge base</p>
+        </div>
+        
+        <div class="main-content">
+            <div id="systemInfo" class="system-info hidden">
+                <strong>System Status:</strong> <span id="systemStatus">Checking...</span>
+            </div>
+            
+            <form class="query-form" id="queryForm">
+                <div class="form-group">
+                    <label for="question">Your Question:</label>
+                    <input type="text" id="question" name="question" 
+                           placeholder="e.g., What is machine learning?" required>
+                </div>
+                
+                <div class="form-group">
+                    <label for="topK">Number of results:</label>
+                    <select id="topK" name="topK">
+                        <option value="1">1</option>
+                        <option value="2">2</option>
+                        <option value="3" selected>3</option>
+                        <option value="4">4</option>
+                        <option value="5">5</option>
+                    </select>
+                </div>
+                
+                <button type="submit" class="btn" id="submitBtn">Submit Query</button>
+            </form>
+            
+            <div class="loading" id="loading">
+                <div class="spinner"></div>
+                <p>Processing your query...</p>
+            </div>
+            
+            <div id="responseSection" class="response-section hidden">
+                <h3>Response</h3>
+                <div id="responseContent" class="response-content"></div>
+                
+                <div id="metadata" class="metadata">
+                    <div class="metadata-item">
+                        <div id="sourcesCount" class="metadata-value">0</div>
+                        <div class="metadata-label">Sources Used</div>
+                    </div>
+                    <div class="metadata-item">
+                        <div id="chunksCount" class="metadata-value">0</div>
+                        <div class="metadata-label">Context Chunks</div>
+                    </div>
+                    <div class="metadata-item">
+                        <div id="modelUsed" class="metadata-value">-</div>
+                        <div class="metadata-label">Model Used</div>
+                    </div>
+                </div>
+                
+                <div id="sources" class="sources">
+                    <h4>Sources:</h4>
+                    <div id="sourcesList"></div>
+                </div>
+            </div>
+            
+            <div id="errorSection" class="error hidden">
+                <strong>Error:</strong> <span id="errorMessage"></span>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Check if API server is running
+        async function checkSystemStatus() {
+            try {
+                const response = await fetch('/system/info');
+                if (response.ok) {
+                    const data = await response.json();
+                    document.getElementById('systemStatus').textContent = 'Ready';
+                    document.getElementById('systemInfo').classList.remove('hidden');
+                    return true;
+                }
+            } catch (error) {
+                console.log('API server not running');
+            }
+            
+            document.getElementById('systemStatus').textContent = 'API Server not available';
+            document.getElementById('systemInfo').classList.remove('hidden');
+            return false;
+        }
+        
+        // Submit query
+        async function submitQuery(question, topK) {
+            try {
+                const response = await fetch('/query', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        question: question,
+                        top_k: parseInt(topK)
+                    })
+                });
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                
+                const data = await response.json();
+                return data;
+            } catch (error) {
+                throw new Error(`Failed to submit query: ${error.message}`);
+            }
+        }
+        
+        // Display response
+        function displayResponse(data) {
+            const result = data.data;
+            
+            // Show response content
+            document.getElementById('responseContent').innerHTML = 
+                result.response.replace(/\n/g, '<br>');
+            
+            // Update metadata
+            document.getElementById('sourcesCount').textContent = result.sources.length;
+            document.getElementById('chunksCount').textContent = result.context_chunks;
+            document.getElementById('modelUsed').textContent = result.model_used;
+            
+            // Show sources
+            const sourcesList = document.getElementById('sourcesList');
+            sourcesList.innerHTML = '';
+            result.sources.forEach((source, index) => {
+                const sourceItem = document.createElement('div');
+                sourceItem.className = 'source-item';
+                sourceItem.textContent = `${index + 1}. ${source}`;
+                sourcesList.appendChild(sourceItem);
+            });
+            
+            // Show response section
+            document.getElementById('responseSection').classList.remove('hidden');
+        }
+        
+        // Show error
+        function showError(message) {
+            document.getElementById('errorMessage').textContent = message;
+            document.getElementById('errorSection').classList.remove('hidden');
+        }
+        
+        // Hide error
+        function hideError() {
+            document.getElementById('errorSection').classList.add('hidden');
+        }
+        
+        // Hide response
+        function hideResponse() {
+            document.getElementById('responseSection').classList.add('hidden');
+        }
+        
+        // Show loading
+        function showLoading() {
+            document.getElementById('loading').style.display = 'block';
+            document.getElementById('submitBtn').disabled = true;
+        }
+        
+        // Hide loading
+        function hideLoading() {
+            document.getElementById('loading').style.display = 'none';
+            document.getElementById('submitBtn').disabled = false;
+        }
+        
+        // Form submission
+        document.getElementById('queryForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const question = document.getElementById('question').value;
+            const topK = document.getElementById('topK').value;
+            
+            if (!question.trim()) {
+                showError('Please enter a question');
+                return;
+            }
+            
+            hideError();
+            hideResponse();
+            showLoading();
+            
+            try {
+                const data = await submitQuery(question, topK);
+                if (data.success) {
+                    displayResponse(data);
+                } else {
+                    showError('Query failed: ' + (data.error || 'Unknown error'));
+                }
+            } catch (error) {
+                showError(error.message);
+            } finally {
+                hideLoading();
+            }
+        });
+        
+        // Check system status on load
+        document.addEventListener('DOMContentLoaded', () => {
+            checkSystemStatus();
+        });
+    </script>
+</body>
+</html>

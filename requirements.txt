@@ -1,0 +1,22 @@
+# pip install google-genai
+# pip install streamlit
+# pip install faiss-cpu
+# pip install wheel
+# pip install torch --index-url https://download.pytorch.org/whl/cpu
+ 
+torch --index-url https://download.pytorch.org/whl/cpu
+fastapi==0.104.1
+uvicorn==0.24.0
+streamlit
+sentence-transformers==2.2.2
+faiss-cpu
+wheel
+google-genai
+python-multipart==0.0.6
+PyPDF2==3.0.1
+python-docx==1.1.0
+numpy
+pandas==2.1.4
+requests==2.31.0
+pydantic==2.5.1
+python-dotenv==1.0.0
